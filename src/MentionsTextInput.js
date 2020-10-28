@@ -29,13 +29,17 @@ export default class MentionsTextInput extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (!nextProps.value) {
+    if (!nextProps.inputValue) {
       this.resetTextbox();
     } else if (this.isTrackingStarted && !nextProps.horizontal && nextProps.suggestionsData.length !== 0) {
       const numOfRows = nextProps.MaxVisibleRowCount >= nextProps.suggestionsData.length ? nextProps.suggestionsData.length : nextProps.MaxVisibleRowCount;
       const height = numOfRows * nextProps.suggestionRowHeight;
       this.openSuggestionsPanel(height);
     }
+  }
+  
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.suggestionsData.length === 0) this.closeSuggestionsPanel();
   }
 
   startTracking() {
@@ -58,6 +62,7 @@ export default class MentionsTextInput extends Component {
     Animated.timing(this.state.suggestionRowHeight, {
       toValue: height ? height : this.props.suggestionRowHeight,
       duration: 100,
+      useNativeDriver: false
     }).start();
   }
 
@@ -65,6 +70,7 @@ export default class MentionsTextInput extends Component {
     Animated.timing(this.state.suggestionRowHeight, {
       toValue: 0,
       duration: 100,
+      useNativeDriver: false
     }).start();
   }
 
@@ -106,7 +112,7 @@ export default class MentionsTextInput extends Component {
   render() {
     return (
       <View>
-        <Animated.View style={[{ ...this.props.suggestionsPanelStyle }, { height: this.state.suggestionRowHeight }]}>
+        <Animated.View style={[this.props.suggestionsPanelStyle, { height: this.state.suggestionRowHeight }]}>
           <FlatList
             keyboardShouldPersistTaps={"always"}
             horizontal={this.props.horizontal}
@@ -127,9 +133,8 @@ export default class MentionsTextInput extends Component {
           ref={component => this._textInput = component}
           onChangeText={this.onChangeText.bind(this)}
           multiline={true}
-          value={this.props.value}
           style={[{ ...this.props.textInputStyle }, { height: Math.min(this.props.textInputMaxHeight, this.state.textInputHeight) }]}
-          placeholder={this.props.placeholder ? this.props.placeholder : 'Write a comment...'}
+          placeholder={this.props.placeholder}
         />
       </View>
     )
@@ -147,7 +152,7 @@ MentionsTextInput.propTypes = {
   textInputMaxHeight: PropTypes.number,
   trigger: PropTypes.string.isRequired,
   triggerLocation: PropTypes.oneOf(['new-word-only', 'anywhere']).isRequired,
-  value: PropTypes.string.isRequired,
+  value: PropTypes.string,
   onChangeText: PropTypes.func.isRequired,
   triggerCallback: PropTypes.func.isRequired,
   renderSuggestionsRow: PropTypes.oneOfType([
